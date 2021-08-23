@@ -1,0 +1,2474 @@
+openapi: "3.0.0"
+servers:
+  - url: "http://localhost:3000/api/v1"
+    description: "for local development"
+  - url: "https://pladat2.herokuapp.com/api/v1"
+    description: "production environment"
+info:
+  description: "This is the API reference of PlaDat2. Courtesy of our marvelous backend team"
+  version: "1.0"
+  title: "PlaDat API reference"
+tags:
+  - name: "student"
+    description: "Operations about students"
+  - name: "company"
+    description: "Operations about companies"
+  - name: "job"
+    description: "Operations about jobs"
+  - name: "skill"
+    description: "Operations about skills"
+  - name: "city"
+    description: "Operations that involve the cities"
+  - name: "country"
+    description: "Operations that involve countries"
+  - name: "ping"
+    description: "Ping operations"
+
+paths:
+  /student/register:
+    post:
+      tags:
+        - "student"
+      summary: "Creates student"
+      description: "Standard registration, some parameters may be optional"
+      operationId: "createStudent"
+      requestBody:
+        description: "Student that needs to register"
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StudentWithCredentials"
+      responses:
+        201:
+          description: "Student registered"
+        400:
+          description: "A string describing the error. Could be for example 'email already used.' or 'Invalid input.'"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                example:
+                  msg: "email already used."
+        500:
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                example:
+                  msg: "Internal Server error."
+  /student/login:
+    post:
+      tags:
+        - "student"
+      summary: "Login student"
+      description: "Login request for the student side of the application"
+      operationId: "loginStudent"
+      requestBody:
+          description: "Student credentials"
+          required: true
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Credentials"
+      responses:
+        200:
+          description: "Student logged in sucessfully"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  jwt:
+                    type: "string"
+                  id:
+                    type: "integer"
+        404:
+          description: "A string describing the error. Could be for example 'email already used.' or 'Invalid input.'"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                example:
+                  msg: "email already used."
+        500:
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                example:
+                  msg: "Internal Server error."
+
+  /student/findOne/{studentId}:
+    get:
+      tags:
+        - "student"
+      summary: "Student profile"
+      description: "Get request that returns the full student profile"
+      operationId: "getStudentProfile"
+      parameters:
+        - name: "studentId"
+          in: "path"
+          description: "id of the student"
+          required: true
+          schema:
+            type: "integer"
+      responses:
+        200:
+          description: "Shows student profile"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StudentWithPopulatedCapabilities"
+        404:
+          description: "Not Found"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                example:
+                  msg: "Student not Found"
+        500:
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                example:
+                  msg: "Internal Server error."
+  
+  /student/findByEmail/{email}:
+    get:
+      tags:
+        - "student"
+      summary: "Returns the student of the mail"
+      description: "Given the mail returns the full student profile corresponding to the mail"
+      operationId: "getStudentProfileByMail"
+      parameters:
+        - name: "email"
+          in: "path"
+          description: "mail of the student"
+          required: true
+          schema:
+            type: "string"
+      responses:
+        200:
+          description: "Shows student profile"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StudentWithPopulatedCapabilities"
+        404:
+          description: "Not Found"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                example:
+                  msg: "Student not Found"
+        500:
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                example:
+                  msg: "Internal Server error."
+  /student/profile:
+    post:
+      tags:
+        - "student"
+      summary: "Updates the profile of the student"
+      description: "Updates the profile of the student who made the call"
+      operationId: "studentProfileUpdate"
+      requestBody:
+        description: "Student profile that needs to be updated"
+        content: 
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StudentWithPopulatedCapabilities"
+      responses:
+        200:
+          description: "profile updated "
+
+        400:
+          description: "Bad Request"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                example:
+                  msg: "The request is not formulated well"
+
+        500:
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                example:
+                  msg: "Internal Server error."
+      security:
+        - bearerAuth: []
+      x-security-scopes:
+        - "student"
+  /student/addCapability:
+    post:
+      tags:
+        - "student"
+      summary: "Adds a capability to the student's profile"
+      description: "Adds the capability in the body of the API call to the student's profile "
+      operationId: "studentAddCapability"
+      requestBody:
+        description: "Capability that is to be added at the skillset of the student. Of course the rating must be present"
+        content: 
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CapabilityWithRatings"
+      responses:
+        201:
+          description: "Profile updated "
+
+        400:
+          description: "Bad Request"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                example:
+                  msg: "The request is not formulated well"
+
+        500:
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                example:
+                  msg: "Internal Server error."
+      security:
+        - bearerAuth: []
+      x-security-scopes:
+        - "student"
+
+  /student/removeCapability:
+    post:
+      tags:
+        - "student"
+      summary: "Adds a capability to the student's profile"
+      description: "Adds the capability in the body of the API call to the student's profile "
+      operationId: "studentRemoveCapability"
+      requestBody:
+        description: "Capability that is to be removed from the skillset of the student"
+        content: 
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Capability"
+      responses:
+        200:
+          description: "Profile updated "
+
+        404:
+          description: "Bad Request"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                example:
+                  msg: "Skill does not exists"
+
+        500:
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                example:
+                  msg: "Internal Server error."
+      security:
+        - bearerAuth: []
+      x-security-scopes:
+        - "student"
+
+  /student/editCapability:
+    post:
+      tags:
+        - "student"
+      summary: "Edits a capability in the student's profile"
+      description: "Edits the capability with the rating in the body of the API call to the student's profile "
+      operationId: "studentEditCapability"
+      requestBody:
+        description: "Capability to be edited in the skillset of the student. Of course the rating must be present"
+        content: 
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CapabilityWithRatings"
+      responses:
+        201:
+          description: "Profile updated "
+
+        400:
+          description: "Bad Request"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                example:
+                  msg: "The request is not formulated well"
+
+        500:
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                example:
+                  msg: "Internal Server error."
+      security:
+        - bearerAuth: []
+      x-security-scopes:
+        - "student"
+
+  /student/:
+    get:
+      tags:
+        - "student"
+      summary: "Returns all the students"
+      description: "Returns all the students"
+      operationId: "getAllStudents"
+      responses:
+        200:
+          description: "List of students"
+          content:
+            application/json:
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/StudentWithPopulatedCapabilities"
+
+  /student/jobs/search:
+    get:
+      tags:
+        - "student"
+      summary: "List of jobs for the student"
+      description: "Fetches the job that the student will have to scroll through (and then accept/refuse). Note that it also accepts query strings for the CityId to filter the results"
+      operationId: "studentScrollJobs"
+      parameters:
+        - name: "remote"
+          in: query
+          required: false
+          schema:
+            type: boolean
+        - name: "city"
+          in: query
+          required: false
+          schema:
+            type: "integer"
+        - name: "salary"
+          in: query
+          required: false
+          schema:
+            type: "integer"
+        - name: "fulltime"
+          in: query
+          required: false
+          schema:
+            type: "boolean"
+      responses:
+        200:
+          description: "List of jobs"
+          content:
+            application/json:
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/Job"
+        400:
+          description: "Bad Request"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                example:
+                  msg: "Student id not valid"
+        500:
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                example:
+                  msg: "Internal Server error."
+      security:
+        - bearerAuth: []
+      x-security-scopes:
+        - "student"
+  /student/jobs/getNotifications:
+    get:
+      tags:
+        - "student"
+      summary: "Gets the notifications for the job that the student has been accepted for"
+      description: "Returns a list of jobs that are the ones that the student has been accepted for (the student can be matched for more than one job, hence the list)"
+      operationId: "studentGetNotifications"
+      responses:
+        200:
+          description: "List of jobs"
+          content:
+            application/json:
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/Job"
+        400:
+          description: "Bad Request"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                example:
+                  msg: "Student id not valid"
+        404:
+          description: "Not Found"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                example:
+                  msg: "Notifications not found"
+        500:
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                example:
+                  msg: "Internal Server error."
+      security:
+        - bearerAuth: []
+      x-security-scopes:
+        - "student"
+  /student/jobs/markApplicationAsSeen/{ApplicationId}:
+    post:
+      tags:
+        - "student"
+      summary: "Marks an application as seen"
+      description: "Given an id of an application, it marks it as \"seen\", which means that that element will not be shown in future notifications"
+      operationId: "studentMarkAsNotified"
+      parameters:
+        - name: "ApplicationId"
+          in: "path"
+          description: "id of the application that will be marked as seen"
+          required: true
+          schema:
+            type: "integer"
+      responses:
+        201:
+          description: "Application marked as seen "
+
+        400:
+          description: "Bad Request"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                example:
+                  msg: "Application id not valid"
+        500:
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                example:
+                  msg: "Internal Server error."
+      security:
+        - bearerAuth: []
+      x-security-scopes:
+        - "student"
+  /student/applications:
+    get:
+      tags:
+        - "student"
+      summary: "List of jobs to which the student applied and their current status"
+      description: "Fetches the job that the student applied to and the state in which they are in (pending, accepted, refused)"
+      operationId: "studentListApplications"
+      responses:
+        200:
+          description: "List of applications, each application includes the job and the job includes the company"
+          content:
+            application/json:
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/ApplicationWithCompany" #todo: ask Cosimo
+        500:
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                example:
+                  msg: "Internal Server error."
+      security:
+        - bearerAuth: [ ]
+      x-security-scopes:
+        - "student"
+  /student/jobs/discard/{jobId}:
+    post:
+      tags:
+        - "student"
+      summary: "Marks the job as discarded"
+      description: "Marks the job offer as not interesting for the student"
+      operationId: "discardJob"
+      parameters:
+        - name: "studentId"
+          in: "path"
+          description: "id of the student"
+          required: true
+          schema:
+            type: "integer"
+        - name: "jobId"
+          in: "path"
+          description: "id of the job to discard"
+          required: true
+          schema:
+            type: "integer"
+      responses:
+        201:
+          description: "Job discarded"
+        400:
+          description: "Bad Request"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                example:
+                  msg: "Student id not valid"
+        500:
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                example:
+                  msg: "Internal Server error."
+      security:
+        - bearerAuth: []
+      x-security-scopes:
+        - "student"
+  /student/jobs/apply/{jobId}:
+    post:
+      tags:
+        - "student"
+      summary: "Apply the student to the job"
+      description: "Marks the offer as interesting for the student (and thus applies the student for the position)"
+      operationId: "applyToJob"
+      parameters:
+        - name: "studentId"
+          in: "path"
+          description: "id of the student"
+          required: true
+          schema:
+            type: "integer"
+        - name: "jobId"
+          in: "path"
+          description: "id of the job to discard"
+          required: true
+          schema:
+            type: "integer"
+      responses:
+        201:
+          description: "Successfully applied to the job"
+        400:
+          description: "Bad Request"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                example:
+                  msg: "Student id not valid"
+        500:
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                example:
+                  msg: "Internal Server error."
+      security:
+        - bearerAuth: []
+      x-security-scopes:
+        - "student"
+  /student/sendMail:
+    post:
+      tags:
+        - "student"
+      summary: "Sends an email"
+      description: "Sends an email to the company along with the information of the student"
+      operationId: "studentSendMail"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Email"
+      responses:
+        200:
+          description: "Email sent"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+        400:
+          description: "Bad Request"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+        404:
+          description: "Not Found"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+        500:
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+      security:
+        - bearerAuth: []
+      x-security-scopes:
+        - "company"
+  /company/findOne:
+    get:
+      tags:
+        - 'company'
+      summary: 'Gets basic info of a company given an id'
+      description: 'Returns all the basic informations of a company, that is, the infos that are stored inside the companies table without any join query'
+      operationId: 'findOneCompany'
+      parameters:
+        - name: "companyId"
+          in: "path"
+          description: "id of the company"
+          required: true
+          schema:
+            type: "integer"
+      responses:
+        200:
+          description: "Shows the company's basic information"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CompanyWithCredentials"
+        400:
+          description: "Bad Request"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                example:
+                  msg: "Company id not valid"
+        404:
+          description: "Not Found"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                example:
+                  msg: "Company profile not Found"
+        500:
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                example:
+                  msg: "Internal Server error."
+
+  /company/:
+    get:
+      tags:
+        - 'company'
+      summary: 'Gets basic info of all the companies in the db'
+      description: 'Returns all the basic informations of all the companies , that is, the infos that are stored inside the companies table without any join query'
+      operationId: 'findAllCompanies'
+      responses:
+        200:
+          description: "Shows an array with the companies' basic information"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CompanyWithCredentials"
+        400:
+          description: "Invalid company id"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                example:
+                  msg: "Invalid id"
+        500:
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                example:
+                  msg: "Internal Server error."
+
+  /company/register:
+    post:
+      tags:
+        - "company"
+      summary: "Creates company"
+      description: "Lets the company register to the PlaDat service, some information are not required (you may register without address, for example)"
+      operationId: "createCompany"
+      requestBody:
+          description: "Company that needs to register"
+          required: true
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CompanyBasicProfile"
+      responses:
+        201:
+          description: "Company registered"
+        400:
+          description: "A string describing the error. Could be for example 'email already used.' or 'Invalid input.'"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                example:
+                  msg: "email already used."
+        500:
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                example:
+                  msg: "Internal Server error."
+  /company/login:
+    post:
+      tags:
+        - "company"
+      summary: "Login company"
+      description: "Allows the company to log into the PlaDat website"
+      operationId: "loginCompany"
+      requestBody:
+        description: "Company credentials"
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Credentials"
+      responses:
+        200:
+          description: "Company logged in successfully"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  jwt:
+                    type: "string"
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                example:
+                  msg: "Invalid email or password"
+        500:
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                example:
+                  msg: "Internal Server error."
+
+  /company/profile:
+    post:
+      tags:
+        - "company"
+      summary: "Edit Company profile"
+      description: "Modifies the company's profile, it's worth mentioning that this request doesn't modify the job offers, but only the information about the company"
+      operationId: "postCompanyProfile"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CompanyFullProfile"
+      responses:
+        200:
+          description: "Shows company profile"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Company"
+        400:
+          description: "Bad Request"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                example:
+                  msg: "Company id not valid"
+        500:
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                example:
+                  msg: "Internal Server error."
+      security:
+        - bearerAuth: []
+      x-security-scopes:
+        - "company"
+
+  /company/imageUpload: 
+    post:
+      tags:
+        - "company"
+      summary: "Upload an image for the company's profile"
+      description: "Upload an image for the company's profile, note that the API basically reroutes to the AWS service, so the syntax of the request is similar"
+      operationId: "imageUpload"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Image"
+      responses:
+        200:
+          description: "Loads the image on the application"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Company"
+        400:
+          description: "Bad Request"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                example:
+                  msg: "No image in the upload"
+
+        500:
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                example:
+                  msg: "Internal Server error."
+      security:
+        - bearerAuth: []
+      x-security-scopes:
+        - "company"
+
+  /company/candidateStudents/{jobId}:
+    get:
+      tags:
+        - "company"
+      summary: "List of students for a job"
+      description: "Returnes the list of students that applied for the specific job, in case the Id is not corresponding to the company that's asking the list a 400 code is returned "
+      operationId: "scrollThroughCandidates"
+      parameters:
+        - name: "jobId"
+          in: "path"
+          description: "id of the job that we are searching candidates for"
+          required: true
+          schema:
+            type: "integer"
+      responses:
+        200:
+          description: "List of students"
+          content:
+            application/json:
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/StudentWithPopulatedCapabilities"
+        400:
+          description: "Bad Request"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                example:
+                  msg: "Company id not valid"
+        500:
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                example:
+                  msg: "Internal Server error."
+      security:
+        - bearerAuth: []
+      x-security-scopes:
+        - "company"
+  /company/getAcceptedStudents/{jobId}:
+    get:
+      tags:
+        - "company"
+      summary: "List of students accepted for a job"
+      description: "Returnes the list of students that are accepted for the specific job, in case the Id is not corresponding to the company that's asking the list a 400 code is returned "
+      operationId: "scrollThroughAcceptedCandidates"
+      parameters:
+        - name: "jobId"
+          in: "path"
+          description: "id of the job who's accepted students we want to get"
+          required: true
+          schema:
+            type: "integer"
+      responses:
+        200:
+          description: "List of students"
+          content:
+            application/json:
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/StudentWithPopulatedCapabilities"
+        400:
+          description: "Bad Request"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                example:
+                  msg: "Company or Job id not valid"
+        500:
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                example:
+                  msg: "Internal Server error."
+      security:
+        - bearerAuth: []
+      x-security-scopes:
+        - "company"
+
+  /company/jobs/{jobId}/discard/{studentId}:
+    post:
+      tags:
+        - "company"
+      summary: "Marks the student as discarded"
+      description: "Discards a student from the list of candidates for a job"
+      operationId: "discardStudent"
+      parameters:
+        - name: "jobId"
+          in: "path"
+          description: "id of the job"
+          required: true
+          schema:
+            type: "integer"
+        - name: "studentId"
+          in: "path"
+          description: "id of the student to discard"
+          required: true
+          schema:
+            type: "integer"
+      responses:
+        201:
+          description: "Student discarded"
+        400:
+          description: "Bad Request"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                example:
+                  msg: "Company id not valid"
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                example:
+                  msg: "This job does not belong to you"
+        500:
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                example:
+                  msg: "Internal Server error."
+      security:
+        - bearerAuth: []
+      x-security-scopes:
+        - "company"  
+  /company/jobs/{jobId}/accept/{studentId}:
+    post:
+      tags:
+        - "company"
+      summary: "Accept the student for the job"
+      description: "Accepts the student specified by the id for the job (also specified by the id) "
+      operationId: "acceptStudent"
+      parameters:
+        - name: "jobId"
+          in: "path"
+          description: "id of the job"
+          required: true
+          schema:
+            type: "integer"
+        - name: "studentId"
+          in: "path"
+          description: "id of the student to discard"
+          required: true
+          schema:
+            type: "integer"
+      responses:
+        201:
+          description: "sucessfully accepted a student"
+        400:
+          description: "Bad Request"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                example:
+                  msg: "Company id not valid"
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                example:
+                  msg: "This job does not belong to you"
+        500:
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                example:
+                  msg: "Internal Server error."
+      security:
+        - bearerAuth: []
+      x-security-scopes:
+        - "company"
+  /ping:
+    get:
+      tags:
+        - "ping"
+      summary: "Basic ping"
+      description: "If the site receives this ping, it returns a 200 ok status"
+      responses:
+        200:
+          description: "List of jobs that match the search"
+
+  /jobs:
+    get:
+      tags:
+        - "job"
+      summary: "Returns all the jobs"
+      description: "In the future this might have a query"
+      responses:
+        200:
+          description: "List of jobs that match the search"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/JobWithCompany"
+        500:
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                example:
+                  msg: "Internal Server error."
+    post:
+      tags:
+        - "job"
+      summary: "Create a job"
+      description: "Create a job for the company"
+      operationId: "createDirectJob"
+      requestBody:
+        description: "Student that needs to register"
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JobWithCompany"
+      responses:
+        201:
+          description: "Successfully created the job"
+        400:
+          description: "Bad Request"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                example:
+                  msg: "Command not valid"
+        500:
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                example:
+                  msg: "Internal Server error."
+      security:
+        - bearerAuth: []
+      x-security-scopes:
+        - "company"
+
+  /jobs/update:
+    post:
+      tags:
+        - "job"
+      summary: "Update the job"
+      description: "Update the job with all the information"
+      operationId: "updateJob"
+      responses:
+        200:
+          description: "Successfully updated the job"
+        400:
+          description: "Bad Request"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                example:
+                  msg: "Command not valid"
+        500:
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                example:
+                  msg: "Internal Server error."
+      security:
+        - bearerAuth: []
+      x-security-scopes:
+        - "company"
+
+  /jobs/update/{jobId}/removeReq/{skillId}:
+    post:
+      tags:
+        - "job"
+      summary: "Remove required skill from job"
+      description: "Removes the required skill from the job (both are given as ids)"
+      operationId: "RemoveReqSkill"
+      parameters:
+        - name: jobId
+          in: path
+          description: "job id"
+          required: true
+          schema:
+            type: integer
+        - name: skillId
+          in: path
+          description: "skill id"
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: "Successfully removed the skill"
+        400:
+          description: "Bad Request"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                example:
+                  msg: "Command not valid"
+        401:
+          description: "Skill already exists"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                example:
+                  msg: "Command not valid"
+        500:
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                example:
+                  msg: "Internal Server error."
+      security:
+        - bearerAuth: []
+      x-security-scopes:
+        - "company"
+  /jobs/update/{jobId}/removeOpt/{skillId}:
+    post:
+      tags:
+        - "job"
+      summary: "Remove optional  skill from job"
+      description: "Removes the optional skill from the job (both are given as ids)"
+      operationId: "RemoveOptSkill"
+      parameters:
+        - name: jobId
+          in: path
+          description: "job id"
+          required: true
+          schema:
+            type: integer
+        - name: skillId
+          in: path
+          description: "skill id"
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: "Successfully removed the skill"
+        400:
+          description: "Bad Request"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                example:
+                  msg: "Command not valid"
+        401:
+          description: "Bad Request"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                example:
+                  msg: "Command not valid"
+        500:
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                example:
+                  msg: "Internal Server error."
+      security:
+        - bearerAuth: []
+      x-security-scopes:
+        - "company"
+  /jobs/update/{jobId}/addReq/{skillId}:
+    post:
+      tags:
+        - "job"
+      summary: "Adds required skill from job"
+      description: "Adds the required skill from the job (both are given as ids)"
+      operationId: "AddReqSkill"
+      parameters:
+        - name: jobId
+          in: path
+          description: "job id"
+          required: true
+          schema:
+            type: integer
+        - name: skillId
+          in: path
+          description: "skill id"
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: "Successfully added the skill"
+        400:
+          description: "Bad Request"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                example:
+                  msg: "Command not valid"
+        401:
+          description: "The job does not belong to you"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                example:
+                  msg: "The job does not belong to you"
+        500:
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                example:
+                  msg: "Internal Server error."
+      security:
+        - bearerAuth: []
+      x-security-scopes:
+        - "company"
+
+  /jobs/update/{jobId}/addOpt/{skillId}:
+    post:
+      tags:
+        - "job"
+      summary: "Adds optional skill from job"
+      description: "Adds the required skill from the job (both are given as ids)"
+      operationId: "AddOptSkill"
+      parameters:
+        - name: jobId
+          in: path
+          description: "job id"
+          required: true
+          schema:
+            type: integer
+        - name: skillId
+          in: path
+          description: "skill id"
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: "Successfully added the skill"
+        400:
+          description: "Bad Request"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                example:
+                  msg: "Command not valid"
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                example:
+                  msg: "This job does not belong to this company"
+        500:
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                example:
+                  msg: "Internal Server error."
+      security:
+        - bearerAuth: []
+      x-security-scopes:
+        - "company"
+
+  /jobs/delete/{jobId}:
+    post:
+      tags:
+        - "job"
+      summary: "Deletes job"
+      description: "Deletes the job whos jobId was in the request"
+      operationId: "DeleteJob"
+      parameters:
+        - name: jobId
+          in: path
+          description: "job id"
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: "Job successfully removed"
+        400:
+          description: "Bad Request"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                example:
+                  msg: "Command not valid"
+        404:
+          description: "Not Found"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                example:
+                  msg: "Job not found"
+        500:
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                example:
+                  msg: "Internal Server error."
+      security:
+        - bearerAuth: []
+      x-security-scopes:
+        - "company"
+
+  /jobs/findOne/{jobId}:
+    get:
+      tags:
+        - "job"
+      summary: "Get a job by id"
+      description: "Returns data about the job with the given id"
+      parameters:
+        - name: id
+          in: path
+          description: "job id"
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: "List of jobs that match the search"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/JobWithCompany"
+        404:
+          description: "Not Found"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                example:
+                  msg: "Job not found"
+        500:
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                example:
+                  msg: "Internal Server error."
+  /cities/{cityId}:
+    get:
+      tags:
+        - "city"
+      summary: "Returns the details about a city"
+      description: "Returns the details about a city (such as name, state, longitude, latitude) given the city id "
+      operationId: "getCity"
+      parameters:
+        - name: "cityId"
+          in: "path"
+          description: "id of the city"
+          required: true
+          schema:
+            type: "integer"
+      responses:
+        200:
+          description: "Details of the city"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/City"
+        400:
+          description: "Bad Request"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                example:
+                  msg: "City id not valid"
+        404:
+          description: "Bad Request"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                example:
+                  msg: "City not found"
+        500:
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                example:
+                  msg: "Internal Server error."
+
+  /cities:
+    get:
+      tags:
+        - "city"
+      summary: "Returns all the cities in the database"
+      description: "Returns all the cities in the database with their fields(such as name, state, longitude, latitude)"
+      operationId: "getAllCities"
+      responses:
+        200:
+          description: "List of the cities in the database"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                $ref: "#/components/schemas/City"
+        500:
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                example:
+                  msg: "Internal Server error."
+  /countries/findOne/{cityId}:
+    get:
+      tags:
+        - "country"
+      summary: "Returns the details about a country"
+      description: "Returns the details about a country (name and code) given the city id "
+      operationId: "getCountry"
+      parameters:
+        - name: "countryId"
+          in: "path"
+          description: "id of the country"
+          required: true
+          schema:
+            type: "integer"
+      responses:
+        200:
+          description: "Details of the country"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Country"
+        400:
+          description: "Bad Request"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                example:
+                  msg: "Country id not valid"
+        404:
+          description: "Not Found"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                example:
+                  msg: "Country could not be found"
+        500:
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                example:
+                  msg: "Internal Server error."
+
+  /countries:
+    get:
+      tags:
+        - "country"
+      summary: "Returns all the countries in the database"
+      description: "Returns all the countries in the database with their fields(name and code)"
+      operationId: "getAllCountries"
+      responses:
+        200:
+          description: "List of the countries in the database"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                $ref: "#/components/schemas/Country"
+        500:
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                example:
+                  msg: "Internal Server error."
+  /skills/:
+    get:
+      tags:
+        - "skill"
+      summary: "Return the skills requested by the query"
+      description: "Given a query, returns all the skills that match the input string. If no query is provided it returns all the skills"
+      parameters:
+      - name: skills
+        in : query
+        description: "Skill query"
+        required: false
+        schema: 
+            type: string
+      responses:
+        200:
+          description: "List of possible skills related to the start of the word"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Capability"
+        400:
+          description: "Bad Request"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                example:
+                  msg: "Query not valid"
+        500:
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                example:
+                  msg: "Internal Server error."
+  /skills/getOne/{skillId}:
+    get:
+      tags:
+        - "skill"
+      summary: "Return the skills requested by the query"
+      description: "Given a query, returns all the skills that match the input string"
+      parameters:
+        - name: skillId
+          in: query
+          description: "Skill id"
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: "Skill with that id"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CapabilityWithCategory"
+        400:
+          description: "Bad Request"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                example:
+                  msg: "Query not valid"
+        404:
+          description: "Not Found"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                example:
+                  msg: "Skill not found"
+        500:
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                example:
+                  msg: "Internal Server error."
+  /skills/getAllCategories:
+    get:
+      tags:
+        - "skill"
+      summary: "Return all the categories"
+      description: "Return all the possible categories"
+
+      responses:
+        200:
+          description: "Skill with that id"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Category"
+        500:
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                example:
+                  msg: "Internal Server error."
+
+  /skills/findByCategory/{categoryId}:
+    get:
+      tags:
+        - "skill"
+      summary: "Return the skills requested by the query"
+      description: "Given a query, returns all the skills that belongs to the given category"
+      parameters:
+        - name: categoryId
+          in : query
+          description: "Skill query"
+          required: false
+          schema:
+            type: string
+      responses:
+        200:
+          description: "List of skills belonging to the given category"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Capability"
+        400:
+          description: "Bad Request"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                example:
+                  msg: "Query not valid"
+        500:
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                example:
+                  msg: "Internal Server error."
+  /skills/search/{name}:
+    get:
+      tags:
+        - "skill"
+      summary: "Return the skills requested by the query"
+      description: "Return the skills with their name or category name starting with the given name"
+      parameters:
+        - name: name
+          in: query
+          description: "name or partial name of a skill or a category"
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: "List of skills with their name or category name starting with the given name"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CapabilityWithCategory"
+components:
+  schemas:
+    LoginResponse:
+      type: "object"
+      properties:
+        token:
+          type: "string"
+        userId:
+          type: "integer"
+      example:
+        token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySUQiOjI5LCJpYXQiOjE1NjE5OTg2NjB9.SWYMJXTTM8pe6NQw1QwS-d8Btt6Isuzzk5JtH775uV0"
+        userId: 4
+    Credentials:
+      type: "object"
+      properties:
+        email:
+          type: "string"
+          format: "email"
+        password:
+          type: "string"
+      example:
+        email: 'google@gmail.com'
+        password: 's3cr3t'
+    StudentBasicProfile:
+      allOf:
+        - type: "object"
+          properties:
+            firstName:
+              type: "string"
+            lastName:
+              type: "string"
+            profilePicture:
+              type: "string"
+              format: "url"
+            birthDate:
+              type: "string"
+              format: "date"
+            email:
+              type: "string"
+              format: "email"
+      example:
+        firstName: "Pippo"
+        lastName: "Poppi"
+        profilePicture: "www.my-pictures-api.com/picture45"
+        birthDate: "15-10-1997"
+        email: "pippo@poppi.com"
+    StudentWithCredentials:
+      allOf:
+        - $ref: "#/components/schemas/StudentBasicProfile"
+        - $ref: "#/components/schemas/Credentials"
+      example:
+        firstName: "a"
+        profilePicture: "www.my-pictures-api.com/picture45"
+        lastName: "b"
+        birthDate: "15-10-1997"
+        email: "a@b.c"
+        password: 's3cr3t'
+    StudentWithCapabilities:
+      allOf:
+        - $ref: "#/components/schemas/StudentBasicProfile"
+        - type: "object"
+          properties:
+            capabilities:
+              type: "array"
+              items:
+                type: "integer"
+            otherCapabilities:
+              type: "array"
+              items:
+                type: "integer"
+      example:
+        firstName: "Pippo"
+        lastName: "Poppi"
+        profilePicture: "www.my-pictures-api.com/picture45"
+        birthDate: "15-10-1997"
+        email: "pippo@poppi.com"
+        password: "s3cr3t"
+        capabilities: [{id: 2, name: 'C#'},{id: 3, name: 'NodeJS'}]
+        otherCapabilities: [{id: 2, name: 'Angular'},{id: 3, name: 'Bug fixing'}]
+    StudentWithPopulatedCapabilities:
+      allOf:
+        - $ref: "#/components/schemas/StudentBasicProfile"
+        - type: "object"
+          properties:
+            capabilities:
+              type: array
+              items:
+                $ref: '#/components/schemas/CapabilityWithRatings'
+            otherCapabilities:
+              type: array
+              items:
+                $ref: '#/components/schemas/CapabilityWithRatings'
+      example:
+        firstName: "Pippo"
+        lastName: "Poppi"
+        profilePicture: "www.my-pictures-api.com/picture45"
+        birthDate: "15-10-1997"
+        email: "pippo@poppi.com"
+        password: "s3cr3t"
+        capabilities: [ 2,4,6 ]
+        otherCapabilities: [ 1,2,3,5 ]
+    Student:
+      allOf:
+        - $ref: "#/components/schemas/StudentWithPopulatedCapabilities"
+        - $ref: "#/components/schemas/Credentials"
+
+    CompanyBasicProfile:
+      allOf:
+        - type: "object"
+          properties:
+            name:
+              type: "string"
+            description:
+              type: "string"
+            profilePicture:
+              type: "string"
+              format: "url"
+            address:
+              type: "string"
+            email:
+              type: 'string'
+      example:
+        name: "pippoCompany"
+        description: "Topolinia's best company"
+        profilePicture: "www.my-pictures-api.com/picture42"
+        address: "82, pippo's street, Topolinia"
+        email: 'company@pippo.com'
+    CompanyWithCredentials:
+      allOf:
+        - $ref: '#/components/schemas/CompanyBasicProfile'
+        - $ref: '#/components/schemas/Credentials'
+      example:
+        name: "pippoCompany"
+        description: "Topolinia's best company"
+        profilePicture: "www.my-pictures-api.com/picture42"
+        address: "82, pippo's street, Topolinia"
+        email: 'company@pippo.com'
+        password: 's3cr3t'
+    ApplicationBasic:
+      allOf:
+        - type: "object"
+          properties:
+            id:
+              type: "integer"
+            date:
+              type: "string"
+              format: "date"
+            declined:
+              type: "boolean"
+            studentId:
+              type: "integer"
+            jobId:
+              type: "integer"
+      example:
+        id: 1
+        date: "2020-11-10"
+        declined: false
+        studentId: 2
+        jobId: 1
+    ApplicationWithCompany:
+      allOf:
+        - $ref: "#/components/schemas/ApplicationBasic"
+        - type: "object"
+          properties:
+            Job:
+              $ref: "#/components/schemas/JobWithCompany"
+    CompanyFullProfile:
+      allOf:
+        - $ref: "#/components/schemas/CompanyBasicProfile"
+        - type: object
+          properties:
+            id:
+              type: "integer"
+            jobs:
+              type: "array"
+              items:
+                $ref: "#/components/schemas/Job"
+
+
+    Company:
+      allOf:
+        - $ref: "#/components/schemas/CompanyFullProfile"
+        - $ref: "#/components/schemas/Credentials"
+      example:
+        id: 15
+        name: "pippoCompany"
+        description: "Topolinia's best company"
+        profilePicture: "www.my-pictures-api.com/picture42"
+        address: "82, pippo's street, Topolinia"
+        jobs: [
+          {
+          "job": {
+            "JuniorDeveloper": {
+              "id": 15,
+              "title": "JuniorDeveloper",
+              "description": "Junior Developer position at PippoCompany ",
+              "requiredCapabilities": {
+                "id": 12,
+                "name": "Java",
+              },
+              "optionalCapabilities": {
+                "id": 13,
+                "name": "C",
+              }
+            }
+          }
+        }
+        ]
+        email: "pippo@pippoCompany.com"
+        password: "s3cr3t"
+
+    Capability: 
+      type: "object"
+      properties:
+        id:
+          type: "integer"
+        name:
+          type: "string"
+      example:
+        id: 12
+        name: "Java"
+
+    CapabilityWithRatings:
+      allOf:
+      - $ref: "#/components/schemas/Capability"
+      - type: "object"
+        properties:
+          rating:
+            type: "integer"
+      example:
+        id: 12
+        name: "Java"
+        rating: 4
+    CapabilityWithCategory:
+      allOf:
+        - $ref: "#/components/schemas/Capability"
+        - type: "object"
+          properties:
+            skillCategory:
+              $ref: "#/components/schemas/Category"
+      example:
+        id: 12
+        name: "Java"
+        skillCategory: { id: 1, name: "Programming Languages", description: "" }
+    Job:
+      type: "object"
+      properties:
+        id:
+          type: "integer"
+        title:
+          type: "string"
+        description:
+          type: "string"
+        cityId:
+          type: "integer"
+        remote:
+          type: boolean
+        salary:
+          type: integer
+        fulltime:
+          type: boolean
+        requiredCapabilities:
+          type: "array"
+          items:
+            type: "integer"
+        optionalCapabilities:
+          type: "array"
+          items:
+            type: "integer"
+      example:
+        id: 15
+        title: "JuniorDeveloper"
+        description: "Junior Developer position at PippoCompany "
+        cityId: 1
+        remote: true
+        salary: 10
+        fulltime: false
+        requiredCapabilities: [1,2,3]
+        optionalCapabilities: [4,5,6]
+    JobWithPopulatedCapabilities:
+      allOf:
+        - $ref: "#/components/schemas/Job"
+        - type: "object"
+          properties:
+            requiredCapabilities:
+              type: "array"
+              items:
+                $ref: "#/components/schemas/Capability"
+            optionalCapabilities:
+              type: "array"
+              items:
+                $ref: "#/components/schemas/Capability"
+    JobWithCompany:
+      allOf:
+        - $ref: "#/components/schemas/Job"
+        - type: "object"
+          properties:
+            company:
+              $ref: "#/components/schemas/Company"
+      example:
+        id: 15
+        title: "JuniorDeveloper"
+        description: "Junior Developer position at PippoCompany "
+        cityId: 1
+        remote: true
+        salary: 10
+        fulltime: false
+        requiredCapabilities: [1, 2]
+        optionalCapabilities: [3, 4]
+        company:
+          id: 15
+          name: "pippoCompany"
+          description: "Topolinia's best company"
+          profilePicture: "www.my-pictures-api.com/picture42"
+          address: "82, pippo's street, Topolinia"
+          jobs: [
+            {
+              "job": {
+                "JuniorDeveloper": {
+                  "id": 15,
+                  "title": "JuniorDeveloper",
+                  "description": "Junior Developer position at PippoCompany ",
+                  "requiredCapabilities": {
+                    "id": 12,
+                    "name": "Java",
+                  },
+                  "optionalCapabilities": {
+                    "id": 13,
+                    "name": "C",
+                  }
+                }
+              }
+            }
+          ]
+          email: "pippo@pippoCompany.com"
+          password: "s3cr3t"
+
+    Image:
+      type: "object"
+      format: "form-encoded"
+      properties:
+        image: 
+          type: "string"
+      example:
+        image: "<form-encoded>"
+    Country:
+      type: object
+      properties:
+        id:
+          type: "integer"
+        name:
+          type: "string"
+        code:
+          type: "string"
+      example:
+        id: 42
+        name: "Italy"
+        code: "IT"
+
+    City:
+      type: object
+      properties:
+        id:
+          type: "integer"
+        name:
+          type: "string"
+        state:
+          type: "string"
+        latitude:
+          type: "number"
+        longitude:
+          type: "number"
+      example:
+        id: 1
+        name: "Piacenza"
+        state: "Italy"
+        latitude: 45.05
+        longitude: 9.7
+    Category:
+      type: object
+      properties:
+        id:
+          type: "integer"
+        name:
+          type: "string"
+        description:
+          type: "string"
+        LevelDescriptions:
+          type: "array"
+          items:
+            $ref: "#/components/schemas/LevelDescription"
+      example:
+        id: 1
+        name: "Programming Languages"
+        description: ""
+        LevelDescriptions: [{id: 1, level: 1, description: 'First Level'}, {id: 2, level: 2, description: 'Second Level'}]
+    LevelDescription:
+      type: object
+      properties:
+        id:
+          type: "integer"
+        level:
+          type: "integer"
+        description:
+          type: "string"
+    Email:
+      type: object
+      properties:
+        message:
+          type: "string"
+        subject:
+          type: "string"
+        companyEmail:
+          type: "string"
+      example:
+        message: "I am the message of the email"
+        subject: "I am the subject of the email"
+        companyEmail: "sample@email.com"
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  
